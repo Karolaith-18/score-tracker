@@ -51,7 +51,7 @@ Abre http://localhost:5173
 
 ---
 
-## Levantar el backend (cuando esté listo)
+## Levantar el backend (En Proceso)
 
 ```bash
 cd server
