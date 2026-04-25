@@ -1,0 +1,14 @@
+# Dependencias
+frontend/node_modules/
+server/node_modules/
+
+# Variables de entorno
+frontend/.env
+server/.env
+
+# Build
+frontend/dist/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
