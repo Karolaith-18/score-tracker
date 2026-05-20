@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useMatch, SETS_TO_WIN_MATCH } from '../context/MatchContext'
+import { useMatch } from '../context/MatchContext'
 
 function TeamScore({ team, teamKey, isServing }) {
   const { match, addPoint, removePoint } = useMatch()
