@@ -1,67 +1,72 @@
-/**
- * modules/matches/match.controller.js
- * Recibe req/res, delega al service y responde con los helpers de response.
- * No contiene lógica de negocio ni acceso a datos.
- */
+import { body, param, validationResult } from 'express-validator'
+import { matchService } from './match.service.js'
+import { ok, fail }     from '../../utils/response.js'
 
-import { matchService }                        from './match.service.js'
-import { ok, created, notFound, badRequest, serverError } from '../../utils/response.js'
+const validate = (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    fail(res, errors.array()[0].msg, 422)
+    return false
+  }
+  return true
+}
+
+export const rules = {
+  create: [
+    body('teamA.name').trim().notEmpty().withMessage('El nombre del equipo A es requerido').isLength({ max: 30 }),
+    body('teamB.name').trim().notEmpty().withMessage('El nombre del equipo B es requerido').isLength({ max: 30 }),
+    body('maxSets').optional().isIn([3, 5]).withMessage('maxSets debe ser 3 o 5'),
+    body('serving').optional().isIn(['A', 'B']).withMessage('serving debe ser A o B'),
+  ],
+  id: [
+    param('id').isMongoId().withMessage('ID de partido inválido'),
+  ],
+  point: [
+    param('id').isMongoId().withMessage('ID de partido inválido'),
+    body('team').isIn(['A', 'B']).withMessage('team debe ser A o B'),
+  ],
+}
 
 export const matchController = {
 
-  getAll: (_req, res) => {
-    try {
-      const matches = matchService.getAllMatches()
-      ok(res, matches)
-    } catch (err) {
-      serverError(res, err.message)
-    }
+  list: async (req, res, next) => {
+    try { ok(res, await matchService.getAll()) }
+    catch (e) { next(e) }
   },
 
-  getById: (req, res) => {
-    try {
-      const match = matchService.getMatchById(req.params.id)
-      ok(res, match)
-    } catch (err) {
-      err.status === 404 ? notFound(res, err.message) : serverError(res, err.message)
-    }
+  get: async (req, res, next) => {
+    if (!validate(req, res)) return
+    try { ok(res, await matchService.getById(req.params.id)) }
+    catch (e) { next(e) }
   },
 
-  create: (req, res) => {
-    try {
-      const match = matchService.createMatch(req.body)
-      created(res, match)
-    } catch (err) {
-      err.status === 400 ? badRequest(res, err.message) : serverError(res, err.message)
-    }
+  create: async (req, res, next) => {
+    if (!validate(req, res)) return
+    try { ok(res, await matchService.create(req.body), 201) }
+    catch (e) { next(e) }
   },
 
-  update: (req, res) => {
-    try {
-      const match = matchService.updateMatch(req.params.id, req.body)
-      ok(res, match)
-    } catch (err) {
-      err.status === 404 ? notFound(res, err.message) : serverError(res, err.message)
-    }
+  update: async (req, res, next) => {
+    if (!validate(req, res)) return
+    try { ok(res, await matchService.update(req.params.id, req.body)) }
+    catch (e) { next(e) }
   },
 
-  delete: (req, res) => {
-    try {
-      const result = matchService.deleteMatch(req.params.id)
-      ok(res, result)
-    } catch (err) {
-      err.status === 404 ? notFound(res, err.message) : serverError(res, err.message)
-    }
+  addPoint: async (req, res, next) => {
+    if (!validate(req, res)) return
+    try { ok(res, await matchService.addPoint(req.params.id, req.body)) }
+    catch (e) { next(e) }
   },
 
-  recordPoint: (req, res) => {
-    try {
-      const event = matchService.recordPoint(req.params.id, req.body)
-      created(res, event)
-    } catch (err) {
-      err.status === 404 ? notFound(res, err.message)  :
-      err.status === 400 ? badRequest(res, err.message) :
-      serverError(res, err.message)
-    }
+  nextSet: async (req, res, next) => {
+    if (!validate(req, res)) return
+    try { ok(res, await matchService.nextSet(req.params.id)) }
+    catch (e) { next(e) }
+  },
+
+  remove: async (req, res, next) => {
+    if (!validate(req, res)) return
+    try { await matchService.remove(req.params.id); ok(res, { deleted: true }) }
+    catch (e) { next(e) }
   },
 }

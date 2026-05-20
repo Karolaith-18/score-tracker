@@ -1,34 +1,32 @@
-/**
- * src/index.js
- * Entry point del servidor Express.
- * Solo orquesta: registra middlewares, monta rutas y arranca.
- */
-
-import express      from 'express'
-import cors         from 'cors'
-import { PORT, FRONTEND_URL } from './config/env.js'
-import matchRoutes  from './modules/matches/match.routes.js'
-import { notFound }     from './middlewares/notFound.js'
-import { errorHandler } from './middlewares/errorHandler.js'
+import express          from 'express'
+import cors             from 'cors'
+import helmet           from 'helmet'
+import { PORT, FRONTEND_URL, NODE_ENV } from './config/env.js'
+import { connectDB }                    from './config/db.js'
+import matchRoutes                      from './modules/matches/match.routes.js'
+import { limiter, writeLimiter }        from './middlewares/rateLimiter.js'
+import { notFound }                     from './middlewares/notFound.js'
+import { errorHandler }                 from './middlewares/errorHandler.js'
 
 const app = express()
 
-// ─── Middlewares globales ─────────────────────
+app.use(helmet())
 app.use(cors({ origin: FRONTEND_URL }))
-app.use(express.json())
+app.use(limiter)
+app.use(express.json({ limit: '10kb' }))
 
-// ─── Rutas ────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, uptime: process.uptime() })
+  res.json({ ok: true, env: NODE_ENV, uptime: process.uptime() })
 })
 
-app.use('/api/matches', matchRoutes)
+app.use('/api/matches', writeLimiter, matchRoutes)
 
-// ─── Manejo de errores (siempre al final) ─────
 app.use(notFound)
 app.use(errorHandler)
 
-// ─── Arrancar ─────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🏐  Score Tracker API → http://localhost:${PORT}`)
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🏐  Score Tracker API → http://localhost:${PORT}`)
+    console.log(`🔒  CORS habilitado para: ${FRONTEND_URL}`)
+  })
 })

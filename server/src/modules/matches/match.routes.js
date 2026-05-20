@@ -1,30 +1,14 @@
-/**
- * modules/matches/match.routes.js
- * Define las rutas del módulo y las conecta con el controller.
- * Se monta en /api/matches desde index.js.
- */
-
-import { Router }          from 'express'
-import { matchController } from './match.controller.js'
+import { Router } from 'express'
+import { matchController, rules } from './match.controller.js'
 
 const router = Router()
 
-// GET    /api/matches
-router.get('/',    matchController.getAll)
-
-// POST   /api/matches
-router.post('/',   matchController.create)
-
-// GET    /api/matches/:id
-router.get('/:id', matchController.getById)
-
-// PATCH  /api/matches/:id
-router.patch('/:id', matchController.update)
-
-// DELETE /api/matches/:id
-router.delete('/:id', matchController.delete)
-
-// POST   /api/matches/:id/point
-router.post('/:id/point', matchController.recordPoint)
+router.get('/',               matchController.list)
+router.post('/',              rules.create,  matchController.create)
+router.get('/:id',            rules.id,      matchController.get)
+router.patch('/:id',          rules.id,      matchController.update)
+router.delete('/:id',         rules.id,      matchController.remove)
+router.post('/:id/point',     rules.point,   matchController.addPoint)
+router.post('/:id/next-set',  rules.id,      matchController.nextSet)
 
 export default router
