@@ -1,7 +1,6 @@
 /**
  * config/game.js
  * Constantes globales de las reglas de voleibol.
- * Centralizar aquí facilita ajustarlas sin tocar la lógica.
  */
 
 export const POINTS_TO_WIN_SET       = 25

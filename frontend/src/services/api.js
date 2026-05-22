@@ -9,14 +9,6 @@
  *
  * Modo ONLINE:                 VITE_USE_API=true
  *   → Las llamadas van a /api  (Vite lo proxea a localhost:3001).
- *
- * Endpoints esperados del backend:
- *   GET    /api/matches
- *   POST   /api/matches
- *   GET    /api/matches/:id
- *   PATCH  /api/matches/:id
- *   DELETE /api/matches/:id
- *   POST   /api/matches/:id/point
  * ─────────────────────────────────────────────────────────
  */
 

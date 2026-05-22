@@ -19,13 +19,7 @@ function AppContent() {
         {!isActive ? (
           <div className="row justify-content-center" style={{ minHeight: '70vh', alignItems: 'center' }}>
             <div className="col-12 col-md-8 col-lg-6 text-center">
-              <svg width="80" height="80" viewBox="0 0 28 28" fill="none" className="mb-4">
-                <circle cx="14" cy="14" r="13" stroke="#3b7fff" strokeWidth="1"/>
-                <path d="M14 1 Q20 7 20 14 Q20 21 14 27" stroke="#f5c518" strokeWidth="1.5" fill="none"/>
-                <path d="M1 14 Q7 8 14 8 Q21 8 27 14" stroke="#f5c518" strokeWidth="1.5" fill="none"/>
-                <path d="M14 1 Q8 7 8 14 Q8 21 14 27" stroke="#3b7fff" strokeWidth="1.5" fill="none" strokeOpacity="0.5"/>
-                <circle cx="14" cy="14" r="2.5" fill="#f5c518"/>
-              </svg>
+              <img src="/volleyball.png" width="80" height="80" alt="volleyball" className="mb-4" />
               <h1 className="font-display mb-2" style={{ fontSize: 'clamp(40px, 8vw, 64px)', letterSpacing: '0.04em' }}>
                 SCORE TRACKER
               </h1>
