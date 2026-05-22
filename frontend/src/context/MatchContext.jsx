@@ -14,12 +14,12 @@ const initialMatch = {
   teamA: { name: 'Equipo A', color: '#3b7fff', score: 0, sets: 0 },
   teamB: { name: 'Equipo B', color: '#ff3b3b', score: 0, sets: 0 },
   currentSet: 1,
-  serving: 'A',        // 'A' | 'B'
-  status: 'idle',      // 'idle' | 'playing' | 'set_over' | 'match_over'
+  serving: 'A',
+  status: 'idle',
   winner: null,
   setWinner: null,
-  setHistory: [],      // [{ set, scoreA, scoreB, winner }]
-  eventLog: [],        // [{ id, set, type, team?, scoreA, scoreB, time }]
+  setHistory: [],
+  eventLog: [],
   maxSets: 5,
   startedAt: null,
 }
@@ -42,15 +42,18 @@ function matchReducer(state, action) {
       }
     }
 
+    case 'SET_MATCH_ID':
+      return { ...state, id: action.payload }
+
     case 'ADD_POINT': {
       if (state.status !== 'playing') return state
 
-      const team      = action.payload        // 'A' | 'B'
-      const other     = team === 'A' ? 'B' : 'A'
+      const team       = action.payload
+      const other      = team === 'A' ? 'B' : 'A'
       const isTiebreak = state.currentSet === state.maxSets
       const setsToWin  = Math.ceil(state.maxSets / 2)
 
-      const newScore  = state[`team${team}`].score + 1
+      const newScore   = state[`team${team}`].score + 1
       const otherScore = state[`team${other}`].score
 
       const newLog = appendLog(state.eventLog, {
@@ -68,7 +71,6 @@ function matchReducer(state, action) {
 
       if (!isSetWon(newScore, otherScore, isTiebreak)) return next
 
-      // Set ganado
       const newSets = state[`team${team}`].sets + 1
       const setHistory = [...state.setHistory, {
         set: state.currentSet,
@@ -124,7 +126,7 @@ function matchReducer(state, action) {
         status: 'playing',
         setWinner: null,
         serving: state.setWinner === 'A' ? 'B' : 'A',
-        eventLog: [],  
+        eventLog: [],
       }
     }
 
@@ -145,21 +147,39 @@ const MatchContext = createContext(null)
 export function MatchProvider({ children }) {
   const [match, dispatch] = useReducer(matchReducer, initialMatch)
 
-  const setupMatch = useCallback((config) => {
+  const setupMatch = useCallback(async (config) => {
     dispatch({ type: 'SETUP_MATCH', payload: config })
-    // TODO (backend): matchService.create(config)
+    try {
+      const res = await matchService.create({
+        teamA: { name: config.teamAName, color: config.teamAColor },
+        teamB: { name: config.teamBName, color: config.teamBColor },
+        maxSets: config.maxSets,
+        serving: config.serving,
+      })
+      if (res?.data?._id) {
+        dispatch({ type: 'SET_MATCH_ID', payload: res.data._id })
+      }
+    } catch (e) {
+      console.warn('Backend no disponible:', e.message)
+    }
   }, [])
 
-  const addPoint = useCallback((team) => {
+  const addPoint = useCallback(async (team) => {
     dispatch({ type: 'ADD_POINT', payload: team })
-    // TODO (backend): matchService.recordPoint(match.id, { team, type: 'point' })
-  }, [])
+    if (match.id) {
+      try {
+        await matchService.recordPoint(match.id, { team })
+      } catch (e) {
+        console.warn('Backend no disponible:', e.message)
+      }
+    }
+  }, [match.id])
 
   const removePoint = useCallback((team) => {
     dispatch({ type: 'REMOVE_POINT', payload: team })
   }, [])
 
-  const nextSet  = useCallback(() => dispatch({ type: 'NEXT_SET' }), [])
+  const nextSet    = useCallback(() => dispatch({ type: 'NEXT_SET' }), [])
   const setServing = useCallback((team) => dispatch({ type: 'SET_SERVING', payload: team }), [])
   const resetMatch = useCallback(() => dispatch({ type: 'RESET' }), [])
 
