@@ -124,6 +124,7 @@ function matchReducer(state, action) {
         status: 'playing',
         setWinner: null,
         serving: state.setWinner === 'A' ? 'B' : 'A',
+        eventLog: [],  
       }
     }
 
