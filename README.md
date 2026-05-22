@@ -51,19 +51,36 @@ Abre http://localhost:5173
 
 ---
 
-## Levantar el backend (En Proceso)
+## Levantar el backend 
 
 ```bash
-cd server
-npm install        # solo la primera vez
-cp .env.example .env
+npm install
 npm run dev
 ```
 
-Y en el `.env` del frontend cambia:
-```
-VITE_USE_API=true
-```
+Abre http://localhost:5173
+
+---
+
+## Despliegue
+
+| Servicio | URL |
+|---|---|
+| Frontend | https://score-tracker-sage.vercel.app |
+| Backend | https://score-tracker-api.onrender.com |
+
+## Endpoints disponibles
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | /api/health | Health check |
+| GET | /api/matches | Listar partidos |
+| POST | /api/matches | Crear partido |
+| GET | /api/matches/:id | Obtener partido |
+| PATCH | /api/matches/:id | Actualizar estado |
+| DELETE | /api/matches/:id | Eliminar partido |
+| POST | /api/matches/:id/point | Registrar punto |
+| POST | /api/matches/:id/next-set | Siguiente set |
 
 ---
 
