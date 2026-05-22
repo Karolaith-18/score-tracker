@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { useMatch } from '../context/MatchContext'
 
 export default function SetOverBanner() {
   const { match, nextSet } = useMatch()
+  const [tiebreakServing, setTiebreakServing] = useState(null)
+
   if (match.status !== 'set_over') return null
 
   const winner = match.setWinner === 'A' ? match.teamA : match.teamB
+  const nextSetNumber = match.currentSet + 1
+  const isTiebreak = nextSetNumber === match.maxSets
 
   return (
     <div className="modal-backdrop-custom">
@@ -40,21 +45,63 @@ export default function SetOverBanner() {
           })}
         </div>
 
+        {/* Tiebreak serving selector */}
+        {isTiebreak && (
+          <div className="mb-4">
+            <p className="form-label-custom mb-2">
+              🏆 TIE-BREAK — ¿Quién saca primero?
+            </p>
+            <div className="d-flex gap-2">
+              {['A', 'B'].map(t => {
+                const team = match[`team${t}`]
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTiebreakServing(t)}
+                    className="flex-fill py-2"
+                    style={{
+                      borderRadius: 10,
+                      border: tiebreakServing === t
+                        ? `1px solid ${team.color}`
+                        : '1px solid rgba(255,255,255,0.08)',
+                      background: tiebreakServing === t
+                        ? `${team.color}22`
+                        : 'transparent',
+                      color: tiebreakServing === t ? '#fff' : 'var(--text-muted)',
+                      fontWeight: 500,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {team.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         <button
           className="btn w-100 py-3"
+          disabled={isTiebreak && !tiebreakServing}
           style={{
-            background: 'var(--accent-blue)',
+            background: isTiebreak && !tiebreakServing
+              ? 'rgba(255,255,255,0.1)'
+              : 'var(--accent-blue)',
             color: '#fff',
             border: 'none',
             borderRadius: 12,
             fontFamily: 'var(--font-display)',
             fontSize: 18,
             letterSpacing: '0.06em',
+            cursor: isTiebreak && !tiebreakServing ? 'not-allowed' : 'pointer',
           }}
-          onClick={nextSet}
+          onClick={() => nextSet(isTiebreak ? tiebreakServing : null)}
         >
-          CONTINUAR — SET {match.currentSet + 1}
-          {match.currentSet + 1 === match.maxSets && ' (TIE-BREAK)'}
+          CONTINUAR — SET {nextSetNumber}
+          {isTiebreak && ' (TIE-BREAK)'}
         </button>
       </div>
     </div>

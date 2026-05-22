@@ -15,6 +15,7 @@ const initialMatch = {
   teamB: { name: 'Equipo B', color: '#ff3b3b', score: 0, sets: 0 },
   currentSet: 1,
   serving: 'A',
+  setStartServing: 'A', 
   status: 'idle',
   winner: null,
   setWinner: null,
@@ -37,6 +38,7 @@ function matchReducer(state, action) {
         teamB: { ...initialMatch.teamB, name: teamBName, color: teamBColor },
         maxSets,
         serving,
+        setStartServing: serving,
         status: 'playing',
         startedAt: new Date().toISOString(),
       }
@@ -118,15 +120,17 @@ function matchReducer(state, action) {
 
     case 'NEXT_SET': {
       if (state.status !== 'set_over') return state
+      const nextServing = action.payload?.serving ?? (state.setStartServing === 'A' ? 'B' : 'A')
       return {
         ...state,
-        teamA:      { ...state.teamA, score: 0 },
-        teamB:      { ...state.teamB, score: 0 },
-        currentSet: state.currentSet + 1,
-        status:     'playing',
-        setWinner:  null,
-        serving:    state.setWinner === 'A' ? 'B' : 'A',
-        eventLog:   [],
+        teamA:           { ...state.teamA, score: 0 },
+        teamB:           { ...state.teamB, score: 0 },
+        currentSet:      state.currentSet + 1,
+        status:          'playing',
+        setWinner:       null,
+        serving:         nextServing,
+        setStartServing: nextServing, 
+        eventLog:        [],
       }
     }
 
@@ -223,8 +227,9 @@ export function MatchProvider({ children }) {
     dispatch({ type: 'REMOVE_POINT', payload: team })
   }, [])
 
-  const nextSet = useCallback(async () => {
-    dispatch({ type: 'NEXT_SET' })
+  const nextSet = useCallback(async (forcedServing = null) => {
+    const nextServing = forcedServing ?? (match.setStartServing === 'A' ? 'B' : 'A') 
+    dispatch({ type: 'NEXT_SET', payload: { serving: nextServing } })
     if (match.id) {
       try {
         await matchService.update(match.id, {
@@ -232,7 +237,7 @@ export function MatchProvider({ children }) {
           scoreB:     0,
           currentSet: match.currentSet + 1,
           status:     'playing',
-          serving:    match.setWinner === 'A' ? 'B' : 'A',
+          serving:    nextServing,
         })
       } catch (e) {
         console.warn('Backend no disponible:', e.message)
