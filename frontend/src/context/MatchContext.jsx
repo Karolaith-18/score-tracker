@@ -71,9 +71,9 @@ function matchReducer(state, action) {
 
       if (!isSetWon(newScore, otherScore, isTiebreak)) return next
 
-      const newSets = state[`team${team}`].sets + 1
+      const newSets    = state[`team${team}`].sets + 1
       const setHistory = [...state.setHistory, {
-        set: state.currentSet,
+        set:    state.currentSet,
         scoreA: team === 'A' ? newScore : otherScore,
         scoreB: team === 'B' ? newScore : otherScore,
         winner: team,
@@ -103,7 +103,7 @@ function matchReducer(state, action) {
 
     case 'REMOVE_POINT': {
       if (state.status !== 'playing') return state
-      const team = action.payload
+      const team     = action.payload
       const newScore = Math.max(0, state[`team${team}`].score - 1)
       return {
         ...state,
@@ -120,13 +120,13 @@ function matchReducer(state, action) {
       if (state.status !== 'set_over') return state
       return {
         ...state,
-        teamA: { ...state.teamA, score: 0 },
-        teamB: { ...state.teamB, score: 0 },
+        teamA:      { ...state.teamA, score: 0 },
+        teamB:      { ...state.teamB, score: 0 },
         currentSet: state.currentSet + 1,
-        status: 'playing',
-        setWinner: null,
-        serving: state.setWinner === 'A' ? 'B' : 'A',
-        eventLog: [],
+        status:     'playing',
+        setWinner:  null,
+        serving:    state.setWinner === 'A' ? 'B' : 'A',
+        eventLog:   [],
       }
     }
 
@@ -141,6 +141,50 @@ function matchReducer(state, action) {
   }
 }
 
+// ─── Helpers para sincronizar con el backend ──
+function calcNextState(match, team) {
+  const other      = team === 'A' ? 'B' : 'A'
+  const isTiebreak = match.currentSet === match.maxSets
+  const setsToWin  = Math.ceil(match.maxSets / 2)
+  const newScore   = match[`team${team}`].score + 1
+  const otherScore = match[`team${other}`].score
+
+  if (!isSetWon(newScore, otherScore, isTiebreak)) {
+    return {
+      [`score${team}`]: newScore,
+      serving: team,
+    }
+  }
+
+  const newSets    = match[`team${team}`].sets + 1
+  const setEntry   = {
+    set:    match.currentSet,
+    scoreA: team === 'A' ? newScore : otherScore,
+    scoreB: team === 'B' ? newScore : otherScore,
+    winner: team,
+  }
+
+  if (newSets >= setsToWin) {
+    return {
+      [`score${team}`]: newScore,
+      [`sets${team}`]:  newSets,
+      serving:          team,
+      status:           'match_over',
+      winner:           team,
+      finishedAt:       new Date().toISOString(),
+      $push:            { setHistory: setEntry },
+    }
+  }
+
+  return {
+    [`score${team}`]: newScore,
+    [`sets${team}`]:  newSets,
+    serving:          team,
+    status:           'set_over',
+    $push:            { setHistory: setEntry },
+  }
+}
+
 // ─── Context ──────────────────────────────────
 const MatchContext = createContext(null)
 
@@ -150,17 +194,14 @@ export function MatchProvider({ children }) {
   const setupMatch = useCallback(async (config) => {
     dispatch({ type: 'SETUP_MATCH', payload: config })
     try {
-      const res = await matchService.create({
+      const res     = await matchService.create({
         teamA: { name: config.teamAName, color: config.teamAColor },
         teamB: { name: config.teamBName, color: config.teamBColor },
         maxSets: config.maxSets,
         serving: config.serving,
       })
-
       const mongoId = res?.data?._id || res?._id
-      if (mongoId) {
-        dispatch({ type: 'SET_MATCH_ID', payload: mongoId })
-      }
+      if (mongoId) dispatch({ type: 'SET_MATCH_ID', payload: mongoId })
     } catch (e) {
       console.warn('Backend no disponible:', e.message)
     }
@@ -170,18 +211,35 @@ export function MatchProvider({ children }) {
     dispatch({ type: 'ADD_POINT', payload: team })
     if (match.id) {
       try {
-        await matchService.recordPoint(match.id, { team })
+        const updates = calcNextState(match, team)
+        await matchService.update(match.id, updates)
       } catch (e) {
         console.warn('Backend no disponible:', e.message)
       }
     }
-  }, [match.id])
+  }, [match])
 
   const removePoint = useCallback((team) => {
     dispatch({ type: 'REMOVE_POINT', payload: team })
   }, [])
 
-  const nextSet    = useCallback(() => dispatch({ type: 'NEXT_SET' }), [])
+  const nextSet = useCallback(async () => {
+    dispatch({ type: 'NEXT_SET' })
+    if (match.id) {
+      try {
+        await matchService.update(match.id, {
+          scoreA:     0,
+          scoreB:     0,
+          currentSet: match.currentSet + 1,
+          status:     'playing',
+          serving:    match.setWinner === 'A' ? 'B' : 'A',
+        })
+      } catch (e) {
+        console.warn('Backend no disponible:', e.message)
+      }
+    }
+  }, [match])
+
   const setServing = useCallback((team) => dispatch({ type: 'SET_SERVING', payload: team }), [])
   const resetMatch = useCallback(() => dispatch({ type: 'RESET' }), [])
 
