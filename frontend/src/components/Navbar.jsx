@@ -7,13 +7,7 @@ export default function Navbar() {
     <nav className="navbar-custom d-flex align-items-center justify-content-between sticky-top">
       <div className="d-flex align-items-center gap-3">
         {/* Volleyball SVG icon */}
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="14" cy="14" r="13" stroke="#3b7fff" strokeWidth="1.5"/>
-          <path d="M14 1 Q20 7 20 14 Q20 21 14 27" stroke="#f5c518" strokeWidth="1.2" fill="none"/>
-          <path d="M1 14 Q7 8 14 8 Q21 8 27 14" stroke="#f5c518" strokeWidth="1.2" fill="none"/>
-          <path d="M14 1 Q8 7 8 14 Q8 21 14 27" stroke="#3b7fff" strokeWidth="1.2" fill="none" strokeDasharray="2 2"/>
-          <circle cx="14" cy="14" r="2" fill="#f5c518"/>
-        </svg>
+        <img src="/volleyball.svg" width="28" height="28" alt="volleyball" />
         <span className="font-display text-bright" style={{ fontSize: '22px', letterSpacing: '0.06em' }}>
           SCORE TRACKER
         </span>

@@ -30,12 +30,7 @@ export default function SetupModal() {
       <div className="modal-custom">
         {/* Header */}
         <div className="text-center mb-4">
-          <svg width="40" height="40" viewBox="0 0 28 28" fill="none" className="mb-3">
-            <circle cx="14" cy="14" r="13" stroke="#3b7fff" strokeWidth="1.5"/>
-            <path d="M14 1 Q20 7 20 14 Q20 21 14 27" stroke="#f5c518" strokeWidth="1.2" fill="none"/>
-            <path d="M1 14 Q7 8 14 8 Q21 8 27 14" stroke="#f5c518" strokeWidth="1.2" fill="none"/>
-            <circle cx="14" cy="14" r="2.5" fill="#f5c518"/>
-          </svg>
+          <img src="/volleyball.svg" width="40" height="40" alt="volleyball" className="mb-3" />
           <h2 className="font-display text-bright mb-1" style={{ fontSize: '28px' }}>NUEVO PARTIDO</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Configura el partido antes de comenzar</p>
         </div>
