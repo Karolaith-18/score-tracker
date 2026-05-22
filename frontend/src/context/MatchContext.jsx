@@ -156,8 +156,10 @@ export function MatchProvider({ children }) {
         maxSets: config.maxSets,
         serving: config.serving,
       })
-      if (res?.data?._id) {
-        dispatch({ type: 'SET_MATCH_ID', payload: res.data._id })
+
+      const mongoId = res?.data?._id || res?._id
+      if (mongoId) {
+        dispatch({ type: 'SET_MATCH_ID', payload: mongoId })
       }
     } catch (e) {
       console.warn('Backend no disponible:', e.message)
