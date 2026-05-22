@@ -20,8 +20,11 @@
  * ─────────────────────────────────────────────────────────
  */
 
-const USE_API = import.meta.env.VITE_USE_API === 'true'
-const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const IS_PROD = window.location.hostname !== 'localhost'
+const USE_API = IS_PROD || import.meta.env.VITE_USE_API === 'true'
+const BASE_URL = IS_PROD
+  ? 'https://score-tracker-api.onrender.com/api'
+  : (import.meta.env.VITE_API_URL || '/api')
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
